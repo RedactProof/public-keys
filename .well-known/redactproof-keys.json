@@ -1,0 +1,13 @@
+{
+  "version": 1,
+  "current_key": {
+    "id": "key-2025-01",
+    "algorithm": "Ed25519",
+    "format": "SPKI-PEM",
+    "valid_from": "2025-01-01T00:00:00Z",
+    "valid_until": null,
+    "url": "/.well-known/redactproof-public-key.pem"
+  },
+  "previous_keys": [],
+  "revoked_keys": []
+}
