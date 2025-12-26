@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>RedactProof Public Keys</title>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      max-width: 700px;
+      margin: 0 auto;
+      padding: 2rem;
+      background: #fafafa;
+      color: #1a1a1a;
+    }
+    h1 { margin-bottom: 0.5rem; }
+    .subtitle { color: #666; margin-bottom: 2rem; }
+    table { width: 100%; border-collapse: collapse; margin: 1.5rem 0; }
+    th, td { text-align: left; padding: 0.75rem; border-bottom: 1px solid #ddd; }
+    th { background: #f0f0f0; }
+    code { background: #e8e8e8; padding: 0.2rem 0.4rem; border-radius: 3px; font-size: 0.9rem; }
+    a { color: #0066cc; }
+    .key-box {
+      background: #1a1a1a;
+      color: #4ade80;
+      padding: 1rem;
+      border-radius: 6px;
+      font-family: monospace;
+      font-size: 0.85rem;
+      overflow-x: auto;
+      white-space: pre;
+    }
+    .status { color: #16a34a; font-weight: 600; }
+  </style>
+</head>
+<body>
+  <h1>RedactProof Public Keys</h1>
+  <p class="subtitle">Cryptographic keys for verifying RedactProof certificates</p>
+
+  <h2>Current Key</h2>
+  <table>
+    <tr><th>Key ID</th><td><code>key-2025-01</code></td></tr>
+    <tr><th>Algorithm</th><td>Ed25519</td></tr>
+    <tr><th>Valid From</th><td>1 January 2025</td></tr>
+    <tr><th>Status</th><td><span class="status">✓ Active</span></td></tr>
+  </table>
+
+  <h2>Public Key (PEM)</h2>
+  <div class="key-box">-----BEGIN PUBLIC KEY-----
+MCowBQYDK2VwAyEAe1vW20NFHudP5Xq2hhSZVRMaKUTO6Jcw3WHkbua0feo=
+-----END PUBLIC KEY-----</div>
+
+  <h2>Endpoints</h2>
+  <table>
+    <tr><th>Primary</th><td><a href="https://redactproof.com/.well-known/redactproof-public-key.pem">redactproof.com/.well-known/redactproof-public-key.pem</a></td></tr>
+    <tr><th>Backup</th><td><a href="./.well-known/redactproof-public-key.pem">.well-known/redactproof-public-key.pem</a></td></tr>
+    <tr><th>Metadata</th><td><a href="./.well-known/redactproof-keys.json">.well-known/redactproof-keys.json</a></td></tr>
+  </table>
+
+  <h2>Usage</h2>
+  <p>Verification certificates (<code>verification.json</code>) exported from RedactProof include an Ed25519 signature. Use this public key with Web Crypto API or any compatible library to verify certificate authenticity.</p>
+
+  <p><a href="https://redactproof.com/verify">→ Verify a certificate</a></p>
+</body>
+</html>
