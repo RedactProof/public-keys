@@ -12,7 +12,7 @@ This repository contains the public cryptographic keys used to verify RedactProo
 
 Verification certificates (`verification.json`) include a signature that can be verified using these public keys.
 
-**Primary endpoint:** `https://redactproof.com/.well-known/redactproof-public-key.pem`
+**Primary endpoint:** `https://api.redactproof.com/.well-known/redactproof-public-key.pem`
 
 **Backup (this repo):** `https://redactproof.github.io/public-keys/.well-known/redactproof-public-key.pem`
 
