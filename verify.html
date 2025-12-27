@@ -1,0 +1,505 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Verify Certificate | RedactProof</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: #f8fafc;
+      color: #1e293b;
+      line-height: 1.6;
+      min-height: 100vh;
+    }
+    .container { max-width: 800px; margin: 0 auto; padding: 2rem 1rem; }
+    header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 1rem 0;
+      border-bottom: 1px solid #e2e8f0;
+      margin-bottom: 2rem;
+    }
+    .logo { font-size: 1.25rem; font-weight: 700; color: #0f172a; text-decoration: none; }
+    .badge {
+      font-size: 0.75rem;
+      background: #dbeafe;
+      color: #1e40af;
+      padding: 0.25rem 0.5rem;
+      border-radius: 4px;
+    }
+    h1 { font-size: 1.5rem; font-weight: 600; margin-bottom: 0.5rem; }
+    .subtitle { color: #64748b; margin-bottom: 2rem; }
+
+    /* Drop zones */
+    .drop-zone {
+      border: 2px dashed #cbd5e1;
+      border-radius: 12px;
+      padding: 2rem;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.15s;
+      background: white;
+      margin-bottom: 1.5rem;
+    }
+    .drop-zone:hover { border-color: #94a3b8; }
+    .drop-zone.drag-over { border-color: #3b82f6; background: #eff6ff; }
+    .drop-zone.success { border-color: #22c55e; background: #f0fdf4; }
+    .drop-zone.error { border-color: #ef4444; background: #fef2f2; }
+    .drop-zone svg { width: 48px; height: 48px; margin: 0 auto 1rem; color: #94a3b8; }
+    .drop-zone.success svg { color: #22c55e; }
+    .drop-zone.error svg { color: #ef4444; }
+    .drop-zone h3 { font-size: 1rem; font-weight: 500; margin-bottom: 0.25rem; }
+    .drop-zone p { font-size: 0.875rem; color: #64748b; }
+
+    /* Certificate display */
+    .certificate {
+      background: white;
+      border: 1px solid #e2e8f0;
+      border-radius: 12px;
+      overflow: hidden;
+      margin-bottom: 1.5rem;
+    }
+    .cert-header {
+      padding: 1rem 1.5rem;
+      border-bottom: 1px solid #e2e8f0;
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+    .cert-header.valid { background: #f0fdf4; }
+    .cert-header.pending { background: #fefce8; }
+    .cert-header.invalid { background: #fef2f2; }
+    .cert-icon {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .cert-header.valid .cert-icon { background: #dcfce7; color: #16a34a; }
+    .cert-header.pending .cert-icon { background: #fef9c3; color: #ca8a04; }
+    .cert-header.invalid .cert-icon { background: #fee2e2; color: #dc2626; }
+    .cert-header h2 { font-size: 1.125rem; font-weight: 600; }
+    .cert-header p { font-size: 0.875rem; color: #64748b; }
+    .cert-body { padding: 1.5rem; }
+    .cert-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 1rem; }
+    @media (max-width: 600px) { .cert-grid { grid-template-columns: 1fr; } }
+    .cert-field label {
+      display: block;
+      font-size: 0.75rem;
+      font-weight: 500;
+      color: #64748b;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: 0.25rem;
+    }
+    .cert-field p { font-size: 0.875rem; color: #1e293b; }
+    .cert-field code {
+      font-family: monospace;
+      font-size: 0.8rem;
+      background: #f1f5f9;
+      padding: 0.125rem 0.25rem;
+      border-radius: 3px;
+    }
+
+    /* Hash verification */
+    .hash-section { margin-top: 1.5rem; padding-top: 1.5rem; border-top: 1px solid #e2e8f0; }
+    .hash-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 1rem; }
+    @media (max-width: 600px) { .hash-grid { grid-template-columns: 1fr; } }
+    .hash-card {
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      padding: 1rem;
+    }
+    .hash-card h4 { font-size: 0.875rem; font-weight: 600; margin-bottom: 0.5rem; }
+    .hash-expected {
+      font-family: monospace;
+      font-size: 0.7rem;
+      color: #64748b;
+      word-break: break-all;
+      margin-bottom: 0.75rem;
+    }
+    .hash-drop {
+      border: 2px dashed #cbd5e1;
+      border-radius: 6px;
+      padding: 1rem;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .hash-drop:hover { border-color: #94a3b8; }
+    .hash-drop.drag-over { border-color: #3b82f6; background: #eff6ff; }
+    .hash-drop.match { border-color: #22c55e; background: #f0fdf4; }
+    .hash-drop.mismatch { border-color: #ef4444; background: #fef2f2; }
+    .hash-drop p { font-size: 0.875rem; color: #64748b; }
+    .hash-drop.match p { color: #16a34a; font-weight: 500; }
+    .hash-drop.mismatch p { color: #dc2626; font-weight: 500; }
+
+    /* Status messages */
+    .status-msg {
+      padding: 1rem;
+      border-radius: 8px;
+      margin-bottom: 1rem;
+      font-size: 0.875rem;
+    }
+    .status-msg.error { background: #fef2f2; color: #dc2626; border: 1px solid #fecaca; }
+    .status-msg.success { background: #f0fdf4; color: #16a34a; border: 1px solid #bbf7d0; }
+
+    /* Footer */
+    footer {
+      margin-top: 3rem;
+      padding-top: 1.5rem;
+      border-top: 1px solid #e2e8f0;
+      text-align: center;
+      font-size: 0.875rem;
+      color: #64748b;
+    }
+    footer a { color: #3b82f6; text-decoration: none; }
+    footer a:hover { text-decoration: underline; }
+
+    /* Info box */
+    .info-box {
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      padding: 1rem;
+      margin-top: 2rem;
+      font-size: 0.875rem;
+      color: #64748b;
+    }
+    .info-box h4 { color: #1e293b; margin-bottom: 0.5rem; }
+    .info-box ul { margin-left: 1.25rem; margin-top: 0.5rem; }
+    .info-box li { margin-bottom: 0.25rem; }
+
+    .hidden { display: none; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <a href="https://redactproof.com" class="logo">RedactProof</a>
+      <span class="badge">Independent Verifier</span>
+    </header>
+
+    <h1>Verify Certificate</h1>
+    <p class="subtitle">Verify RedactProof certificates independently using this open-source tool.</p>
+
+    <div id="error-msg" class="status-msg error hidden"></div>
+    <div id="success-msg" class="status-msg success hidden"></div>
+
+    <!-- Step 1: Drop verification.json -->
+    <div id="json-drop" class="drop-zone">
+      <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>
+      </svg>
+      <h3>Drop verification.json</h3>
+      <p>The certificate file from your RedactProof export</p>
+    </div>
+
+    <!-- Certificate display (hidden until loaded) -->
+    <div id="certificate" class="certificate hidden">
+      <div id="cert-header" class="cert-header pending">
+        <div class="cert-icon">
+          <svg width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>
+          </svg>
+        </div>
+        <div>
+          <h2 id="cert-title">Verifying...</h2>
+          <p id="cert-subtitle">Checking signature</p>
+        </div>
+      </div>
+      <div class="cert-body">
+        <div class="cert-grid">
+          <div class="cert-field">
+            <label>Certificate ID</label>
+            <p id="cert-id"><code>-</code></p>
+          </div>
+          <div class="cert-field">
+            <label>Certified By</label>
+            <p id="cert-by">-</p>
+          </div>
+          <div class="cert-field">
+            <label>Date</label>
+            <p id="cert-date">-</p>
+          </div>
+          <div class="cert-field">
+            <label>Pages</label>
+            <p id="cert-pages">-</p>
+          </div>
+        </div>
+        <div class="cert-field" style="margin-top: 1rem;">
+          <label>Redacted Items</label>
+          <p id="cert-items">-</p>
+        </div>
+
+        <!-- Hash verification section -->
+        <div id="hash-section" class="hash-section hidden">
+          <h3 style="font-size: 1rem; margin-bottom: 1rem;">Verify Documents</h3>
+          <div class="hash-grid">
+            <div class="hash-card">
+              <h4>Redacted PDF</h4>
+              <div class="hash-expected" id="redacted-hash-expected">-</div>
+              <div id="redacted-drop" class="hash-drop" data-type="redacted">
+                <p>Drop to verify</p>
+              </div>
+            </div>
+            <div class="hash-card">
+              <h4>Original PDF</h4>
+              <div class="hash-expected" id="original-hash-expected">-</div>
+              <div id="original-drop" class="hash-drop" data-type="original">
+                <p>Drop to verify</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="info-box">
+      <h4>How This Works</h4>
+      <p>This tool verifies RedactProof certificates entirely in your browser:</p>
+      <ul>
+        <li>Ed25519 signature verification using Web Crypto API</li>
+        <li>SHA-256 document hash comparison</li>
+        <li>No files are uploaded - everything runs locally</li>
+        <li>Public key loaded from this GitHub Pages site</li>
+      </ul>
+      <p style="margin-top: 0.75rem;">This is an independent verification tool. The cryptographic proof is self-contained in your verification.json file.</p>
+    </div>
+
+    <footer>
+      <p>
+        <a href="./">Public Keys</a> &middot;
+        <a href="https://redactproof.com">RedactProof</a> &middot;
+        <a href="https://github.com/RedactProof/public-keys">Source</a>
+      </p>
+      <p style="margin-top: 0.5rem;">&copy; 2025 RedactProof</p>
+    </footer>
+  </div>
+
+  <script>
+    // State
+    let certificate = null;
+    let publicKey = null;
+
+    // DOM elements
+    const jsonDrop = document.getElementById('json-drop');
+    const certEl = document.getElementById('certificate');
+    const certHeader = document.getElementById('cert-header');
+    const errorMsg = document.getElementById('error-msg');
+    const successMsg = document.getElementById('success-msg');
+    const hashSection = document.getElementById('hash-section');
+
+    // Load public key from same domain
+    async function loadPublicKey() {
+      const pem = await fetch('./.well-known/redactproof-public-key.pem').then(r => r.text());
+      const b64 = pem.replace(/-----BEGIN PUBLIC KEY-----|-----END PUBLIC KEY-----|\s/g, '');
+      const binary = atob(b64);
+      const bytes = new Uint8Array(binary.length);
+      for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+      return crypto.subtle.importKey('spki', bytes, { name: 'Ed25519' }, true, ['verify']);
+    }
+
+    // SHA-256 hash
+    async function sha256(buffer) {
+      const hashBuffer = await crypto.subtle.digest('SHA-256', buffer);
+      return Array.from(new Uint8Array(hashBuffer)).map(b => b.toString(16).padStart(2, '0')).join('');
+    }
+
+    // Verify signature
+    async function verifySignature(cert, key) {
+      const signedData = {
+        version: cert.version,
+        cert_id: cert.cert_id,
+        certified_by: cert.certified_by,
+        certified_by_type: cert.certified_by_type,
+        content_page_count: cert.content_page_count,
+        entity_counts: cert.entity_counts,
+        original_hash: cert.original_hash,
+        redacted_hash: cert.redacted_hash,
+        timestamp: cert.timestamp,
+      };
+      const canonical = JSON.stringify(signedData, Object.keys(signedData).sort());
+      const dataBytes = new TextEncoder().encode(canonical);
+      const sigBytes = Uint8Array.from(atob(cert.signature), c => c.charCodeAt(0));
+      return crypto.subtle.verify('Ed25519', key, sigBytes, dataBytes);
+    }
+
+    // Format date
+    function formatDate(iso) {
+      return new Date(iso).toLocaleDateString('en-GB', {
+        day: 'numeric', month: 'long', year: 'numeric',
+        hour: '2-digit', minute: '2-digit'
+      });
+    }
+
+    // Format entity counts
+    function formatCounts(counts) {
+      const entries = Object.entries(counts || {}).filter(([_, v]) => v > 0);
+      if (!entries.length) return 'None';
+      return entries.map(([k, v]) => {
+        const label = k.split('_').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
+        return `${label}: ${v}`;
+      }).join(', ');
+    }
+
+    // Show error
+    function showError(msg) {
+      errorMsg.textContent = msg;
+      errorMsg.classList.remove('hidden');
+      successMsg.classList.add('hidden');
+    }
+
+    // Show success
+    function showSuccess(msg) {
+      successMsg.textContent = msg;
+      successMsg.classList.remove('hidden');
+      errorMsg.classList.add('hidden');
+    }
+
+    // Hide messages
+    function hideMessages() {
+      errorMsg.classList.add('hidden');
+      successMsg.classList.add('hidden');
+    }
+
+    // Handle verification.json
+    async function handleVerificationJson(file) {
+      hideMessages();
+
+      try {
+        const text = await file.text();
+        const cert = JSON.parse(text);
+
+        // Validate structure
+        if (!cert.cert_id || !cert.signature || !cert.original_hash || !cert.redacted_hash) {
+          throw new Error('Invalid verification.json structure');
+        }
+
+        // Load public key if not already loaded
+        if (!publicKey) {
+          try {
+            publicKey = await loadPublicKey();
+          } catch (e) {
+            showError('Failed to load public key. Check your connection.');
+            return;
+          }
+        }
+
+        // Verify signature
+        const valid = await verifySignature(cert, publicKey);
+
+        if (!valid) {
+          jsonDrop.classList.add('error');
+          jsonDrop.classList.remove('success');
+          showError('Signature invalid - certificate may have been tampered with');
+          return;
+        }
+
+        // Success - display certificate
+        certificate = cert;
+        jsonDrop.classList.add('success');
+        jsonDrop.classList.remove('error');
+        jsonDrop.querySelector('h3').textContent = 'Signature Valid';
+        jsonDrop.querySelector('p').textContent = file.name;
+
+        // Update certificate display
+        certEl.classList.remove('hidden');
+        certHeader.classList.remove('pending', 'invalid');
+        certHeader.classList.add('valid');
+        document.getElementById('cert-title').textContent = 'Certificate Valid';
+        document.getElementById('cert-subtitle').textContent = 'Ed25519 signature verified';
+        document.getElementById('cert-id').innerHTML = `<code>${cert.cert_id}</code>`;
+        document.getElementById('cert-by').textContent = cert.certified_by;
+        document.getElementById('cert-date').textContent = formatDate(cert.timestamp);
+        document.getElementById('cert-pages').textContent = `${cert.content_page_count} page${cert.content_page_count !== 1 ? 's' : ''}`;
+        document.getElementById('cert-items').textContent = formatCounts(cert.entity_counts);
+
+        // Show hash verification section
+        hashSection.classList.remove('hidden');
+        document.getElementById('redacted-hash-expected').textContent = cert.redacted_hash;
+        document.getElementById('original-hash-expected').textContent = cert.original_hash;
+
+      } catch (e) {
+        jsonDrop.classList.add('error');
+        showError('Failed to parse verification.json: ' + e.message);
+      }
+    }
+
+    // Handle PDF drop for hash verification
+    async function handlePdfDrop(file, type) {
+      if (!certificate) return;
+
+      const dropEl = document.getElementById(`${type}-drop`);
+      dropEl.innerHTML = '<p>Hashing...</p>';
+
+      try {
+        const buffer = await file.arrayBuffer();
+        const hash = await sha256(buffer);
+        const expected = type === 'redacted' ? certificate.redacted_hash : certificate.original_hash;
+        const match = hash.toLowerCase() === expected.toLowerCase();
+
+        dropEl.classList.remove('drag-over');
+        dropEl.classList.add(match ? 'match' : 'mismatch');
+        dropEl.innerHTML = match
+          ? '<p>Hash matches</p>'
+          : `<p>Hash mismatch</p><p style="font-size:0.7rem;margin-top:0.25rem;word-break:break-all;">${hash.slice(0,16)}...</p>`;
+
+        // Check if both verified
+        const redactedOk = document.getElementById('redacted-drop').classList.contains('match');
+        const originalOk = document.getElementById('original-drop').classList.contains('match');
+        if (redactedOk && originalOk) {
+          showSuccess('Both documents verified - hashes match certificate');
+        }
+      } catch (e) {
+        dropEl.innerHTML = '<p>Error hashing file</p>';
+        dropEl.classList.add('mismatch');
+      }
+    }
+
+    // Drag and drop handlers
+    function setupDropZone(el, handler, accept) {
+      el.addEventListener('dragover', e => {
+        e.preventDefault();
+        el.classList.add('drag-over');
+      });
+      el.addEventListener('dragleave', e => {
+        e.preventDefault();
+        el.classList.remove('drag-over');
+      });
+      el.addEventListener('drop', async e => {
+        e.preventDefault();
+        el.classList.remove('drag-over');
+        const file = e.dataTransfer.files[0];
+        if (!file) return;
+        if (accept && !file.name.toLowerCase().endsWith(accept)) {
+          showError(`Please drop a ${accept} file`);
+          return;
+        }
+        await handler(file, el.dataset?.type);
+      });
+      el.addEventListener('click', () => {
+        const input = document.createElement('input');
+        input.type = 'file';
+        input.accept = accept || '*';
+        input.onchange = async e => {
+          const file = e.target.files[0];
+          if (file) await handler(file, el.dataset?.type);
+        };
+        input.click();
+      });
+    }
+
+    // Initialize
+    setupDropZone(jsonDrop, handleVerificationJson, '.json');
+    setupDropZone(document.getElementById('redacted-drop'), handlePdfDrop, '.pdf');
+    setupDropZone(document.getElementById('original-drop'), handlePdfDrop, '.pdf');
+  </script>
+</body>
+</html>
