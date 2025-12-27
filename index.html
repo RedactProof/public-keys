@@ -58,10 +58,16 @@ MCowBQYDK2VwAyEAe1vW20NFHudP5Xq2hhSZVRMaKUTO6Jcw3WHkbua0feo=
     <tr><th>Metadata</th><td><a href="https://api.redactproof.com/.well-known/redactproof-keys.json">api.redactproof.com/.well-known/redactproof-keys.json</a></td></tr>
   </table>
 
+  <h2>Verification Tools</h2>
+  <table>
+    <tr><th>Primary</th><td><a href="https://redactproof.com/verify">redactproof.com/verify</a></td></tr>
+    <tr><th>Independent</th><td><a href="./verify.html">verify.html</a> (this site - no RedactProof infrastructure)</td></tr>
+  </table>
+
   <h2>Usage</h2>
   <p>Verification certificates (<code>verification.json</code>) exported from RedactProof include an Ed25519 signature. Use this public key with Web Crypto API or any compatible library to verify certificate authenticity.</p>
 
-  <p>You can also use <a href="https://redactproof.com/verify">redactproof.com/verify</a> for convenience—however, verification is designed to be performed independently using standard cryptographic tools. RedactProof provides the verification page as a tool, not as an authoritative source. The cryptographic proof is self-contained in your exported files.</p>
+  <p>Verification is designed to be performed independently using standard cryptographic tools. The <a href="./verify.html">standalone verifier</a> on this page works entirely offline and does not require any RedactProof infrastructure. The cryptographic proof is self-contained in your exported files.</p>
 
   <hr style="margin-top: 2rem; border: none; border-top: 1px solid #ddd;">
   <p style="color: #666;">Tools provided by <a href="https://redactproof.com">RedactProof</a></p>
